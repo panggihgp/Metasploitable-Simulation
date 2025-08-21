@@ -65,7 +65,6 @@ show options
 - Jika sudah lengkap, jalankan serangan
 ```
 exploit
-
 ```
 
 ```
@@ -84,13 +83,10 @@ whoami
 - Eksplorasi sistem
 ```
 ls -l      //melihat list file dan direktory
-
 ```
 ```
 uname -a   //melihat versi kernel dan informasi sistem
-
 ```
 ```
 cat /etc/passwd  //melihat daftar user
-
 ```
