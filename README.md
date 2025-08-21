@@ -2,7 +2,7 @@
 This repository shows how to use metasploitable for testing vulnerabilities in a beginner way.
 
 ## Simulation requirements
-- Virtual Box/ VM ware
+- Oracle Virtual Box/ VMware Workstation
   
   Download VirtualBox [here!](https://www.virtualbox.org/wiki/Downloads).
 
