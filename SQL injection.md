@@ -65,16 +65,16 @@ DVWA Security -> Script Security -> Low -> Submit
 ```
 - Mencoba SQL Injection
 ```
-1` or 1=1--
+1' or 1=1-- -
 ```
-- `1'`:Tanda kutip tunggal (`) mengakhiri string di dalam kueri SQL, sehingga memungkinkan Anda menyisipkan kode Anda sendiri.
+- `1'`:Tanda kutip tunggal (') mengakhiri string di dalam kueri SQL, sehingga memungkinkan Anda menyisipkan kode Anda sendiri.
 
 - `or 1=1`: Kondisi ini akan selalu bernilai benar. 1 sama dengan 1, jadi kondisi OR akan membuat seluruh kueri menjadi benar.
 
 - `--`: Ini adalah komentar di SQL. Tanda ini akan membuat bagian selanjutnya dari kueri (yaitu, verifikasi kata sandi) diabaikan oleh database.
 
 ```
-ID: 1` or 1=1--
+ID: 1' or 1=1-- -
 First name: admin
 Surname: admin
 ```
